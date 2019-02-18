@@ -1,0 +1,21 @@
+# bytecode-compiled files
+__pycache__
+
+.idea/
+
+# egg-info directories
+*.egg-info
+
+# pyenv
+.python-version
+
+# pytest cache
+.cache
+
+# coverage files
+.coverage
+
+docker/.localenv
+*.pytest_cache/
+
+.mypy_cache/

@@ -1,0 +1,6 @@
+[flake8]
+ignore = W503,E501,E203
+exclude = alembic_scripts
+max-line-length = 100
+import-order-style = pep8
+application-import-names = weather_api,integration_tests,workers_config,tasks,alembic_scripts,connectors,handlers,models

@@ -1,0 +1,9 @@
+pytest==3.6.4
+pytest-cov==2.5.1
+pytest-mock==1.10.0
+pytest-flask==0.10.0
+pytz==2018.5
+requests==2.19.1
+ipdb==0.11.0
+freezegun==0.3.10
+Werkzeug==0.14.1

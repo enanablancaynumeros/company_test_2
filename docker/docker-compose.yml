@@ -1,0 +1,111 @@
+version: "3.6"
+
+services:
+  postgres:
+    restart: on-failure
+    image: "postgres:9.6.6"
+    environment:
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+      PGDATA: "${PGDATA_LOCATION}"
+    ports:
+      - "${POSTGRES_PORT}:5432"
+
+  api:
+    build:
+      context: ../
+      dockerfile: docker/api.Dockerfile
+    restart: on-failure
+    env_file:
+      - .env
+    command: --api
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    depends_on:
+      - rabbitmq
+      - postgres
+
+  db_migrations:
+    build:
+      context: ../
+      dockerfile: docker/api.Dockerfile
+    restart: on-failure
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq
+      - postgres
+    command: --migrations
+
+  rabbitmq:
+    restart: on-failure
+    image: "rabbitmq:3-management"
+    environment:
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST}
+      RABBITMQ_NODENAME: node@rabbitmq
+    ports:
+      - "${RABBITMQ_MANAGEMENT_PORT}:${RABBITMQ_MANAGEMENT_PORT}"
+      - "${RABBITMQ_PORT}:${RABBITMQ_PORT}"
+
+  worker:
+    restart: on-failure
+    build:
+      context: ../
+      dockerfile: docker/worker.Dockerfile
+    env_file:
+      - .env
+    environment:
+      WORKER_QUEUE: "default"
+      WORKER_NAME: "worker"
+      WORKER_CONCURRENCY: 2
+    command: --worker
+    depends_on:
+      - rabbitmq
+      - postgres
+
+  celerybeat:
+    restart: on-failure
+    build:
+      context: ../
+      dockerfile: docker/worker.Dockerfile
+    env_file:
+    - .env
+    command: --celerybeat
+    depends_on:
+    - rabbitmq
+    - postgres
+
+  flower:
+    restart: on-failure
+    build:
+      context: ../
+      dockerfile: docker/worker.Dockerfile
+    env_file:
+    - .env
+    environment:
+      FLOWER_DB_PATH: ${FLOWER_DB_PATH}
+      FLOWER_PORT: ${FLOWER_PORT}
+    depends_on:
+    - rabbitmq
+    - postgres
+    ports:
+      - "${FLOWER_PORT}:${FLOWER_PORT}"
+    command: --flower
+
+  tests:
+    build:
+      context: ../
+      dockerfile: docker/tests.Dockerfile
+    env_file:
+     - .env
+    environment:
+      FLASK_APP: api/weather_api/app
+    depends_on:
+      - api
+      - postgres
+      - worker
+      - flower
