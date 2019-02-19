@@ -30,6 +30,13 @@ def alembic_autogenerate_revision():
 
 
 @app.cli.command()
+def trigger_etl():
+    """Added it here to simplify things for the demo"""
+    from tasks.weather_etl import update_station_locations
+    update_station_locations.delay()
+
+
+@app.cli.command()
 def create_database_and_upgrade():
     from alembic_scripts.utils import alembic_upgrade_head
 
